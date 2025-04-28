@@ -1,6 +1,62 @@
 import { useState, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 import { Line } from 'react-chartjs-2';
 import { MathJax } from 'better-react-mathjax';
+
+function SpacetimeMesh() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const time = useRef(0);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    
+    time.current += 0.01;
+    
+    // Update geometry to show dynamic spacetime curvature
+    const positions = meshRef.current.geometry.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const y = positions.getY(i);
+      const distance = Math.sqrt(x * x + y * y);
+      
+      // Dynamic warping based on time
+      const z = Math.sin(distance + time.current) * Math.exp(-distance * 0.3);
+      positions.setZ(i, z);
+    }
+    positions.needsUpdate = true;
+  });
+
+  return (
+    <mesh ref={meshRef}>
+      <planeGeometry args={[10, 10, 50, 50]} />
+      <meshPhongMaterial 
+        color="#4a90e2"
+        wireframe
+        side={THREE.DoubleSide}
+        transparent
+        opacity={0.8}
+      />
+    </mesh>
+  );
+}
+
+function MassObject() {
+  const sphereRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (!sphereRef.current) return;
+    sphereRef.current.rotation.y += 0.01;
+  });
+
+  return (
+    <mesh ref={sphereRef} position={[0, 0, 0]}>
+      <sphereGeometry args={[0.5, 32, 32]} />
+      <meshPhongMaterial color="#000000" />
+    </mesh>
+  );
+}
 
 export function GeneralRelativityJulianaSimulation() {
   const [massParameter, setMassParameter] = useState(1.0);
@@ -139,6 +195,18 @@ export function GeneralRelativityJulianaSimulation() {
             className="w-full"
           />
           <div className="text-center text-gray-300">Λ = {cosmologicalConstant.toFixed(2)} Λ₀</div>
+        </div>
+      </div>
+
+      <div className="bg-black/30 rounded-lg overflow-hidden">
+        <div className="h-[400px]">
+          <Canvas camera={{ position: [5, 5, 5], fov: 45 }}>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} intensity={1} />
+            <SpacetimeMesh />
+            <MassObject />
+            <OrbitControls enablePan={false} />
+          </Canvas>
         </div>
       </div>
 
