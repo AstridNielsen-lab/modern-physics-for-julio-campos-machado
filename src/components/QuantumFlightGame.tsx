@@ -141,9 +141,11 @@ function DamagedAsteroidParticles({ position, size }) {
 }
 
 // Asteroid component
-function Asteroid({ position, size, rotation, speed, hits = 0 }) {
+function Asteroid({ position, size, rotation, speed, hits = 0, flashTime = 0 }) {
   const asteroidRef = useRef<THREE.Group>();
   const meshRef = useRef<THREE.Mesh>();
+  const [isFlashing, setIsFlashing] = useState(false);
+  const flashTimer = useRef(0);
   const [asteroidGeometry] = useState(() => {
     const geometry = new THREE.IcosahedronGeometry(size, 0);
     // Add some random deformation to make asteroids look unique
@@ -160,19 +162,33 @@ function Asteroid({ position, size, rotation, speed, hits = 0 }) {
     return geometry;
   });
   
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (asteroidRef.current) {
       asteroidRef.current.rotation.x += rotation.x;
       asteroidRef.current.rotation.y += rotation.y;
       asteroidRef.current.rotation.z += rotation.z;
       asteroidRef.current.position.y -= speed;
+      
+      // Handle flashing effect for hit feedback
+      if (flashTime > 0) {
+        flashTimer.current += delta;
+        const flashCycle = Math.sin(flashTimer.current * 30) > 0;
+        setIsFlashing(flashCycle);
+        
+        if (flashTimer.current >= flashTime) {
+          setIsFlashing(false);
+        }
+      }
     }
   });
 
-  // Determine asteroid color based on hits
-  const color = hits === 0 ? "#a0a0a0" : "#ff4400";
-  const emissive = hits === 0 ? "#000000" : "#ff2200";
-  const emissiveIntensity = hits === 0 ? 0 : 0.5;
+  // Determine asteroid color based on hits and flashing state
+  const baseColor = hits === 0 ? "#a0a0a0" : "#ff4400";
+  const color = isFlashing ? "#ffffff" : baseColor;
+  const baseEmissive = hits === 0 ? "#000000" : "#ff2200";
+  const emissive = isFlashing ? "#ffff00" : baseEmissive;
+  const baseEmissiveIntensity = hits === 0 ? 0 : 0.5;
+  const emissiveIntensity = isFlashing ? 2 : baseEmissiveIntensity;
   
   return (
     <group ref={asteroidRef} position={[position.x, position.y, 0]}>
@@ -518,7 +534,8 @@ function GameScene({
           z: Math.random() * 0.02 - 0.01
         },
         speed,
-        hits: 0 // Track hits for 2-hit destruction
+        hits: 0, // Track hits for 2-hit destruction
+        flashTime: 0 // Initial flash time (for collision feedback)
       }]);
     }
     
@@ -529,7 +546,9 @@ function GameScene({
     let collisionOccurred = false;
     
     // Check laser-asteroid collisions
-    for (let i = newLasers.length - 1; i >= 0; i--) {
+      // COLLISION DETECTION SECTION
+      // This section handles all collisions between lasers and asteroids
+      for (let i = newLasers.length - 1; i >= 0; i--) {
       const laser = newLasers[i];
       
       // Remove lasers that are off-screen
@@ -547,8 +566,8 @@ function GameScene({
           Math.pow(laser.position.y - asteroid.position.y, 2)
         );
         
-        // If collision detected - improved hit detection with a larger area
-        const hitRadius = asteroid.size + 0.35; // Larger hit area for better gameplay feel
+        // COLLISION DETECTION - Greatly improved hit detection with a much larger area
+        const hitRadius = asteroid.size + 0.5; // Much larger hit area for better gameplay feel
         if (distance < hitRadius) {
           // Remove laser
           newLasers.splice(i, 1);
@@ -565,6 +584,9 @@ function GameScene({
               isSmall: true
             });
             
+            // Make asteroid flash for better hit feedback
+            asteroid.flashTime = 0.3; // Flash duration in seconds
+            
             // Play hit sound
             playSound('smallExplosion');
             
@@ -580,12 +602,29 @@ function GameScene({
             }]);
           } else {
             // Second hit - destroy the asteroid
-            // Add explosion
+            // Add larger explosion for asteroid destruction
             newExplosions.push({
               id: `explosion-${Date.now()}-${Math.random()}`,
               position: { ...asteroid.position },
               isSmall: false
             });
+            
+            // Add secondary explosions for more visual feedback
+            const secondaryExplosionsCount = 2 + Math.floor(Math.random() * 2);
+            for (let i = 0; i < secondaryExplosionsCount; i++) {
+              const offset = {
+                x: (Math.random() - 0.5) * asteroid.size * 2,
+                y: (Math.random() - 0.5) * asteroid.size * 2
+              };
+              newExplosions.push({
+                id: `secondary-explosion-${Date.now()}-${Math.random()}-${i}`,
+                position: { 
+                  x: asteroid.position.x + offset.x,
+                  y: asteroid.position.y + offset.y
+                },
+                isSmall: true
+              });
+            }
             
             // Remove asteroid
             newAsteroids.splice(j, 1);
@@ -611,7 +650,8 @@ function GameScene({
       }
     }
     
-    // Check ship-asteroid collisions
+    // COLLISION DETECTION SECTION
+    // This section handles all collisions between ship and asteroids
     for (let i = newAsteroids.length - 1; i >= 0; i--) {
       const asteroid = newAsteroids[i];
       
@@ -627,13 +667,20 @@ function GameScene({
         Math.pow(shipPosition.y - asteroid.position.y, 2)
       );
       
-      // If collision detected - improved collision detection with spaceship
-      const collisionRadius = asteroid.size + 0.7; // Larger collision area for better gameplay feel
+      // COLLISION DETECTION - Greatly improved collision detection with spaceship
+      const collisionRadius = asteroid.size + 1.0; // Much larger collision area for better gameplay feel
       if (distance < collisionRadius) {
-        // Add explosion
+        // Add main explosion
         newExplosions.push({
           id: `explosion-${Date.now()}-${Math.random()}`,
           position: { ...asteroid.position }
+        });
+        
+        // Add ship damage explosion at ship position
+        newExplosions.push({
+          id: `ship-hit-${Date.now()}-${Math.random()}`,
+          position: { ...shipPosition },
+          isSmall: true
         });
         
         // Remove asteroid
@@ -723,6 +770,7 @@ function GameScene({
           rotation={asteroid.rotation}
           speed={asteroid.speed}
           hits={asteroid.hits}
+          flashTime={asteroid.flashTime}
         />
       ))}
       
