@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { MathJax } from 'better-react-mathjax';
+import { Physics, useBox, usePlane, useSphere } from '@react-three/cannon';
 
 // Sound System
 function useSound() {
@@ -351,15 +352,25 @@ function GameScene({
   const [laserEnergy, setLaserEnergy] = useState(100);
   const [score, setScore] = useState(0);
   const keysPressed = useRef({});
+  const mouseButtonPressed = useRef(false);
   const lastShot = useRef(0);
   const gameTime = useRef(0);
   const asteroidSpawnRate = useRef(3); // Time in seconds between asteroid spawns
   const lastAsteroidSpawn = useRef(0);
+  const canvasRef = useRef(null);
+  
+  // Get the Three.js rendering context
+  const { gl, camera, scene } = useThree();
   
   // Initialize sound system
   const { playSound } = useSound();
   
-  // Set up key listeners
+  // Reference to canvas for mouse position calculation
+  useEffect(() => {
+    canvasRef.current = gl.domElement;
+  }, [gl]);
+  
+  // Set up key and mouse listeners
   useEffect(() => {
     const handleKeyDown = (e) => {
       keysPressed.current[e.key] = true;
@@ -369,12 +380,34 @@ function GameScene({
       keysPressed.current[e.key] = false;
     };
     
+    const handleMouseDown = (e) => {
+      if (e.button === 0) { // Left mouse button
+        mouseButtonPressed.current = true;
+      }
+    };
+    
+    const handleMouseUp = (e) => {
+      if (e.button === 0) { // Left mouse button
+        mouseButtonPressed.current = false;
+      }
+    };
+    
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    
+    if (canvasRef.current) {
+      canvasRef.current.addEventListener('mousedown', handleMouseDown);
+      canvasRef.current.addEventListener('mouseup', handleMouseUp);
+    }
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      
+      if (canvasRef.current) {
+        canvasRef.current.removeEventListener('mousedown', handleMouseDown);
+        canvasRef.current.removeEventListener('mouseup', handleMouseUp);
+      }
     };
   }, []);
   
@@ -396,13 +429,17 @@ function GameScene({
       setShipRotation(0); // Reset tilt
     }
     
-    // Fire laser
-    if ((keysPressed.current[' '] || keysPressed.current['f']) && 
+    // Fire laser with keyboard
+    const shouldFireLaser = (keysPressed.current[' '] || keysPressed.current['f'] || mouseButtonPressed.current) && 
         gameTime.current - lastShot.current > 0.3 && // Cooldown
-        laserEnergy >= 5) { // Energy check
-      
+        laserEnergy >= 5; // Energy check
+    
+    if (shouldFireLaser) {
       lastShot.current = gameTime.current;
       setLaserEnergy(prev => Math.max(0, prev - 5)); // Decrease energy on shot
+      
+      // Play laser sound
+      playSound('smallExplosion');
       
       setLasers(prev => [...prev, {
         id: `laser-${Date.now()}-${Math.random()}`,
@@ -465,8 +502,9 @@ function GameScene({
           Math.pow(laser.position.y - asteroid.position.y, 2)
         );
         
-        // If collision detected
-        if (distance < asteroid.size + 0.2) {
+        // If collision detected - improved hit detection with a slightly larger area
+        const hitRadius = asteroid.size + 0.25; // Slightly larger hit area for better gameplay feel
+        if (distance < hitRadius) {
           // Remove laser
           newLasers.splice(i, 1);
           
@@ -528,8 +566,9 @@ function GameScene({
         Math.pow(shipPosition.y - asteroid.position.y, 2)
       );
       
-      // If collision detected
-      if (distance < asteroid.size + 0.5) {
+      // If collision detected - improved collision detection with spaceship
+      const collisionRadius = asteroid.size + 0.6; // Slightly larger collision area for better gameplay feel
+      if (distance < collisionRadius) {
         // Add explosion
         newExplosions.push({
           id: `explosion-${Date.now()}-${Math.random()}`,
@@ -747,6 +786,9 @@ export function QuantumFlightGame() {
           />
           <OrbitControls enabled={false} />
         </Canvas>
+        <div className="absolute bottom-4 left-4 text-white text-sm bg-black/50 p-2 rounded">
+          <p>Click with mouse to fire lasers</p>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -778,6 +820,7 @@ export function QuantumFlightGame() {
               <span className="font-semibold">Actions:</span>
               <ul className="pl-4 mt-1 space-y-1">
                 <li>• Space / F: Fire laser</li>
+                <li>• Mouse Button: Fire laser</li>
                 <li>• Q: Toggle laser mode</li>
               </ul>
             </div>
