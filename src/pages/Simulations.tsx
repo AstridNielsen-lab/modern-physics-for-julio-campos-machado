@@ -23,9 +23,10 @@ import { StringTheoryJulianaSimulation } from '../components/StringTheoryJuliana
 import { GeneralRelativityJulianaSimulation } from '../components/GeneralRelativityJulianaSimulation';
 import { TeslaElectricitySimulation } from '../components/TeslaElectricitySimulation';
 import { EdisonLightSimulation } from '../components/EdisonLightSimulation';
+import { QuantumFlightGame } from '../components/QuantumFlightGame';
 
 export function Simulations() {
-  const [activeSimulation, setActiveSimulation] = useState<string>('relatividade');
+  const [activeSimulation, setActiveSimulation] = useState<string>('quantum-flight');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
@@ -43,6 +44,18 @@ export function Simulations() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
           <div className="lg:col-span-1 space-y-4">
+            <button
+              onClick={() => setActiveSimulation('quantum-flight')}
+              className={`w-full text-left p-4 rounded-lg transition-colors ${
+                activeSimulation === 'quantum-flight' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white/10 hover:bg-white/20'
+              }`}
+            >
+              <h3 className="font-semibold">Quantum Flight Game</h3>
+              <p className="text-sm text-gray-300">Simulador de Voo com Asteróides</p>
+            </button>
+
             <button
               onClick={() => setActiveSimulation('edison-light')}
               className={`w-full text-left p-4 rounded-lg transition-colors ${
@@ -309,6 +322,7 @@ export function Simulations() {
           </div>
 
           <div className="lg:col-span-3">
+            {activeSimulation === 'quantum-flight' && <QuantumFlightGame />}
             {activeSimulation === 'edison-light' && <EdisonLightSimulation />}
             {activeSimulation === 'tesla-electricity' && <TeslaElectricitySimulation />}
             {activeSimulation === 'general-relativity-juliana' && <GeneralRelativityJulianaSimulation />}

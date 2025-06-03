@@ -1,4 +1,4 @@
-import { BookOpen, Atom, Lightbulb, LineChart, Brain, FlaskRound as Flask, AlertTriangle, PlayCircle, Github, Linkedin, Twitter } from 'lucide-react';
+import { BookOpen, Atom, Lightbulb, LineChart, Brain, FlaskRound as Flask, AlertTriangle, PlayCircle, Github, Linkedin, Twitter, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TheoryCard } from '../components/TheoryCard';
 import { InconsistenciesSection } from '../components/InconsistenciesSection';
@@ -6,6 +6,7 @@ import { theories } from '../data/theories';
 import { discoveries } from '../data/discoveries';
 import { methodology } from '../data/methodology';
 import { inconsistencies } from '../data/inconsistencies';
+
 
 export function Home() {
   return (
@@ -22,6 +23,13 @@ export function Home() {
           >
             <PlayCircle size={24} />
             Explorar Simulações Interativas
+          </Link>
+          <Link
+            to="/atom-simulator"
+            className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-colors text-lg"
+          >
+            <Sparkles size={24} />
+            Simulador de Átomos
           </Link>
           <a
             href="https://quantum-physics-for-julio-campos-machado.vercel.app/"

@@ -23,6 +23,18 @@ export const methodology: Methodology = {
     {
       title: "Integração interdisciplinar",
       description: "Exploração das conexões entre diferentes teorias."
+    },
+    {
+      title: "Estudo da relação entre voltagem e velocidade dos elétrons",
+      description: "Investigação dos efeitos da voltagem na velocidade e comportamento dos elétrons em diferentes meios condutores."
+    },
+    {
+      title: "Análise da impedância como campo abeliano",
+      description: "Estudo teórico e experimental da impedância elétrica como manifestação de um campo abeliano e suas propriedades matemáticas."
+    },
+    {
+      title: "Investigação de fenômenos de ressonância magnética",
+      description: "Exploração dos princípios físicos da ressonância magnética e suas aplicações na compreensão da estrutura da matéria."
     }
   ]
 };

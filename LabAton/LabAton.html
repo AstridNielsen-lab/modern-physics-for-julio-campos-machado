@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrutura de um Átomo - Simulação Interativa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .simulation-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        canvas {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .element-selector {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            width: 180px;
+        }
+        
+        .visualization-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .visualization-mode label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        
+        .visualization-mode input {
+            margin-right: 5px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .slider-container label {
+            width: 150px;
+        }
+        
+        input[type="range"] {
+            width: 200px;
+        }
+        
+        .info-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .element-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .element-info h3 {
+            grid-column: 1 / -1;
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 8px;
+        }
+        
+        .element-property {
+            margin-bottom: 8px;
+        }
+        
+        .element-property strong {
+            color: #2980b9;
+        }
+        
+        .electron-config {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+            display: inline-block;
+        }
+        
+        .temperature-effect {
+            padding: 10px;
+            background-color: #fff8e1;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 3px solid #f39c12;
+        }
+        
+        .particle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .particle-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .proton {
+            background-color: #e74c3c;
+        }
+        
+        .neutron {
+            background-color: #34495e;
+        }
+        
+        .electron {
+            background-color: #3498db;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Estrutura de um Átomo - Simulação Interativa</h1>
+        
+        <div class="simulation-container">
+            <div class="control-group">
+                <div class="control-row">
+                    <div>
+                        <label for="elementSelector">Elemento:</label>
+                        <select id="elementSelector" class="element-selector">
+                            <option value="custom">Personalizado</option>
+                            <option value="H">Hidrogênio (H)</option>
+                            <option value="He">Hélio (He)</option>
+                            <option value="Li">Lítio (Li)</option>
+                            <option value="Be">Berílio (Be)</option>
+                            <option value="B">Boro (B)</option>
+                            <option value="C">Carbono (C)</option>
+                            <option value="N">Nitrogênio (N)</option>
+                            <option value="O">Oxigênio (O)</option>
+                            <option value="F">Flúor (F)</option>
+                            <option value="Ne">Neônio (Ne)</option>
+                            <option value="Na">Sódio (Na)</option>
+                            <option value="Mg">Magnésio (Mg)</option>
+                            <option value="Al">Alumínio (Al)</option>
+                            <option value="Si">Silício (Si)</option>
+                            <option value="P">Fósforo (P)</option>
+                            <option value="S">Enxofre (S)</option>
+                            <option value="Cl">Cloro (Cl)</option>
+                            <option value="Ar">Argônio (Ar)</option>
+                            <option value="K">Potássio (K)</option>
+                            <option value="Ca">Cálcio (Ca)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="visualization-mode">
+                        <label>
+                            <input type="radio" name="visualMode" value="bohr" checked> Modelo de Bohr
+                        </label>
+                        <label>
+                            <input type="radio" name="visualMode" value="cloud"> Nuvem Eletrônica
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="temperatureSlider">Temperatura (K):</label>
+                    <input type="range" id="temperatureSlider" min="100" max="1000" value="300" class="slider">
+                    <span id="temperatureValue">300</span>
+                </div>
+            </div>
+            
+            <canvas id="atomCanvas" width="600" height="400"></canvas>
+            
+            <div class="element-info" id="elementInfo">
+                <h3>Informações do Elemento: <span id="elementName">Personalizado</span></h3>
+                <div>
+                    <div class="element-property">
+                        <strong>Símbolo:</strong> <span id="elementSymbol">-</span>
+                    </div>
+                    <div class="element-property">
+                        <strong>Número Atômico:</strong> <span id="atomicNumber">-</span>
+                    </div>
+                    <div class="element-property">
+                        <strong>Massa Atômica:</strong> <span id="atomicMass">-</span> u
+                    </div>
+                    <div class="element-property">
+                        <strong>Categoria:</strong> <span id="elementCategory">-</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="element-property">
+                        <strong>Config. Eletrônica:</strong> 
+                        <div class="electron-config" id="electronConfig">-</div>
+                    </div>
+                    <div class="element-property">
+                        <strong>Densidade:</strong> <span id="density">-</span>
+                    </div>
+                    <div class="element-property">
+                        <strong>Ponto de Fusão:</strong> <span id="meltingPoint">-</span>
+                    </div>
+                    <div class="temperature-effect" id="tempEffect">
+                        À temperatura ambiente, as partículas apresentam movimento térmico moderado.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="slider-container" id="customControls">
+                    <label for="protonSlider">Prótons:</label>
+                    <input type="range" id="protonSlider" min="1" max="20" value="5" class="slider">
+                    <span id="protonValue">5</span>
+                </div>
+                
+                <div class="slider-container" id="customControls">
+                    <label for="neutronSlider">Nêutrons:</label>
+                    <input type="range" id="neutronSlider" min="0" max="30" value="5" class="slider">
+                    <span id="neutronValue">5</span>
+                </div>
+                
+                <div class="slider-container" id="customControls">
+                    <label for="electronSlider">Elétrons:</label>
+                    <input type="range" id="electronSlider" min="1" max="20" value="5" class="slider">
+                    <span id="electronValue">5</span>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startButton">Iniciar</button>
+                <button id="stopButton">Parar</button>
+                <button id="resetButton">Reiniciar</button>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2>Sobre a Estrutura Atômica</h2>
+            <p>Um átomo é a unidade básica de matéria que forma tudo o que existe no universo. Cada átomo é composto por três tipos principais de partículas subatômicas:</p>
+            
+            <div class="particle">
+                <div class="particle-icon proton"></div>
+                <div>
+                    <h3>Prótons</h3>
+                    <p>Partículas com carga positiva que se encontram no núcleo do átomo. O número de prótons determina qual elemento químico o átomo representa.</p>
+                </div>
+            </div>
+            
+            <div class="particle">
+                <div class="particle-icon neutron"></div>
+                <div>
+                    <h3>Nêutrons</h3>
+                    <p>Partículas sem carga elétrica que também se encontram no núcleo, junto com os prótons. Eles ajudam a estabilizar o núcleo.</p>
+                </div>
+            </div>
+            
+            <div class="particle">
+                <div class="particle-icon electron"></div>
+                <div>
+                    <h3>Elétrons</h3>
+                    <p>Partículas com carga negativa que orbitam o núcleo em camadas eletrônicas. Eles são responsáveis pelas propriedades químicas dos elementos e pela formação de ligações.</p>
+                </div>
+            </div>
+            
+            <h2>Modelo do Átomo</h2>
+            <p>Esta simulação representa o modelo de Bohr do átomo, onde os elétrons orbitam o núcleo em camadas específicas. Na realidade, o modelo atual da mecânica quântica descreve os elétrons como nuvens de probabilidade em vez de partículas com trajetórias definidas.</p>
+            
+            <h2>Importância na Física Moderna</h2>
+            <p>A compreensão da estrutura atômica foi um dos grandes avanços da física moderna no início do século XX. Esse conhecimento levou a desenvolvimentos importantes em diversas áreas, incluindo medicina, energia, materiais e tecnologia.</p>
+        </div>
+        
+        <footer>
+            <p>Projeto Modern Physics - LabAton © 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('atomCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Simulation parameters
+        let protons = 5;
+        let neutrons = 5;
+        let electrons = 5;
+        let temperature = 300; // Kelvin
+        let animationId = null;
+        let isRunning = false;
+        let visualMode = "bohr"; // "bohr" or "cloud"
+        let selectedElement = "custom";
+        
+        // Particle arrays
+        let protonParticles = [];
+        let neutronParticles = [];
+        let electronParticles = [];
+        
+        // Element database
+        const elements = {
+            "H": {
+                name: "Hidrogênio",
+                symbol: "H",
+                atomicNumber: 1,
+                atomicMass: 1.008,
+                electronConfig: "1s¹",
+                density: "0.00009 g/cm³ (gás)",
+                meltingPoint: "-259.16°C",
+                neutrons: 0,
+                category: "Não-metal",
+                electronArrangement: [1]
+            },
+            "He": {
+                name: "Hélio",
+                symbol: "He",
+                atomicNumber: 2,
+                atomicMass: 4.0026,
+                electronConfig: "1s²",
+                density: "0.0001785 g/cm³ (gás)",
+                meltingPoint: "-272.2°C (a alta pressão)",
+                neutrons: 2,
+                category: "Gás Nobre",
+                electronArrangement: [2]
+            },
+            "Li": {
+                name: "Lítio",
+                symbol: "Li",
+                atomicNumber: 3,
+                atomicMass: 6.94,
+                electronConfig: "1s² 2s¹",
+                density: "0.534 g/cm³",
+                meltingPoint: "180.5°C",
+                neutrons: 4,
+                category: "Metal Alcalino",
+                electronArrangement: [2, 1]
+            },
+            "Be": {
+                name: "Berílio",
+                symbol: "Be",
+                atomicNumber: 4,
+                atomicMass: 9.0122,
+                electronConfig: "1s² 2s²",
+                density: "1.85 g/cm³",
+                meltingPoint: "1287°C",
+                neutrons: 5,
+                category: "Metal Alcalino-terroso",
+                electronArrangement: [2, 2]
+            },
+            "B": {
+                name: "Boro",
+                symbol: "B",
+                atomicNumber: 5,
+                atomicMass: 10.81,
+                electronConfig: "1s² 2s² 2p¹",
+                density: "2.34 g/cm³",
+                meltingPoint: "2075°C",
+                neutrons: 6,
+                category: "Semimetal",
+                electronArrangement: [2, 3]
+            },
+            "C": {
+                name: "Carbono",
+                symbol: "C",
+                atomicNumber: 6,
+                atomicMass: 12.011,
+                electronConfig: "1s² 2s² 2p²",
+                density: "2.267 g/cm³ (grafite)",
+                meltingPoint: "3550°C (grafite)",
+                neutrons: 6,
+                category: "Não-metal",
+                electronArrangement: [2, 4]
+            },
+            "N": {
+                name: "Nitrogênio",
+                symbol: "N",
+                atomicNumber: 7,
+                atomicMass: 14.007,
+                electronConfig: "1s² 2s² 2p³",
+                density: "0.001251 g/cm³ (gás)",
+                meltingPoint: "-210.1°C",
+                neutrons: 7,
+                category: "Não-metal",
+                electronArrangement: [2, 5]
+            },
+            "O": {
+                name: "Oxigênio",
+                symbol: "O",
+                atomicNumber: 8,
+                atomicMass: 15.999,
+                electronConfig: "1s² 2s² 2p⁴",
+                density: "0.001429 g/cm³ (gás)",
+                meltingPoint: "-218.79°C",
+                neutrons: 8,
+                category: "Não-metal",
+                electronArrangement: [2, 6]
+            },
+            "F": {
+                name: "Flúor",
+                symbol: "F",
+                atomicNumber: 9,
+                atomicMass: 18.998,
+                electronConfig: "1s² 2s² 2p⁵",
+                density: "0.001696 g/cm³ (gás)",
+                meltingPoint: "-219.67°C",
+                neutrons: 10,
+                category: "Halogênio",
+                electronArrangement: [2, 7]
+            },
+            "Ne": {
+                name: "Neônio",
+                symbol: "Ne",
+                atomicNumber: 10,
+                atomicMass: 20.180,
+                electronConfig: "1s² 2s² 2p⁶",
+                density: "0.0008999 g/cm³ (gás)",
+                meltingPoint: "-248.59°C",
+                neutrons: 10,
+                category: "Gás Nobre",
+                electronArrangement: [2, 8]
+            },
+            "Na": {
+                name: "Sódio",
+                symbol: "Na",
+                atomicNumber: 11,
+                atomicMass: 22.990,
+                electronConfig: "1s² 2s² 2p⁶ 3s¹",
+                density: "0.968 g/cm³",
+                meltingPoint: "97.79°C",
+                neutrons: 12,
+                category: "Metal Alcalino",
+                electronArrangement: [2, 8, 1]
+            },
+            "Mg": {
+                name: "Magnésio",
+                symbol: "Mg",
+                atomicNumber: 12,
+                atomicMass: 24.305,
+                electronConfig: "1s² 2s² 2p⁶ 3s²",
+                density: "1.738 g/cm³",
+                meltingPoint: "650°C",
+                neutrons: 12,
+                category: "Metal Alcalino-terroso",
+                electronArrangement: [2, 8, 2]
+            },
+            "Al": {
+                name: "Alumínio",
+                symbol: "Al",
+                atomicNumber: 13,
+                atomicMass: 26.982,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p¹",
+                density: "2.7 g/cm³",
+                meltingPoint: "660.32°C",
+                neutrons: 14,
+                category: "Metal",
+                electronArrangement: [2, 8, 3]
+            },
+            "Si": {
+                name: "Silício",
+                symbol: "Si",
+                atomicNumber: 14,
+                atomicMass: 28.085,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p²",
+                density: "2.3296 g/cm³",
+                meltingPoint: "1414°C",
+                neutrons: 14,
+                category: "Semimetal",
+                electronArrangement: [2, 8, 4]
+            },
+            "P": {
+                name: "Fósforo",
+                symbol: "P",
+                atomicNumber: 15,
+                atomicMass: 30.974,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p³",
+                density: "1.82 g/cm³ (branco)",
+                meltingPoint: "44.15°C (branco)",
+                neutrons: 16,
+                category: "Não-metal",
+                electronArrangement: [2, 8, 5]
+            },
+            "S": {
+                name: "Enxofre",
+                symbol: "S",
+                atomicNumber: 16,
+                atomicMass: 32.06,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p⁴",
+                density: "2.07 g/cm³",
+                meltingPoint: "115.21°C",
+                neutrons: 16,
+                category: "Não-metal",
+                electronArrangement: [2, 8, 6]
+            },
+            "Cl": {
+                name: "Cloro",
+                symbol: "Cl",
+                atomicNumber: 17,
+                atomicMass: 35.45,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p⁵",
+                density: "0.003214 g/cm³ (gás)",
+                meltingPoint: "-101.5°C",
+                neutrons: 18,
+                category: "Halogênio",
+                electronArrangement: [2, 8, 7]
+            },
+            "Ar": {
+                name: "Argônio",
+                symbol: "Ar",
+                atomicNumber: 18,
+                atomicMass: 39.948,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p⁶",
+                density: "0.0017837 g/cm³ (gás)",
+                meltingPoint: "-189.34°C",
+                neutrons: 22,
+                category: "Gás Nobre",
+                electronArrangement: [2, 8, 8]
+            },
+            "K": {
+                name: "Potássio",
+                symbol: "K",
+                atomicNumber: 19,
+                atomicMass: 39.098,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹",
+                density: "0.862 g/cm³",
+                meltingPoint: "63.38°C",
+                neutrons: 20,
+                category: "Metal Alcalino",
+                electronArrangement: [2, 8, 8, 1]
+            },
+            "Ca": {
+                name: "Cálcio",
+                symbol: "Ca",
+                atomicNumber: 20,
+                atomicMass: 40.078,
+                electronConfig: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s²",
+                density: "1.54 g/cm³",
+                meltingPoint: "842°C",
+                neutrons: 20,
+                category: "Metal Alcalino-terroso",
+                electronArrangement: [2, 8, 8, 2]
+            }
+        };
+        
+        // Sliders and values
+        const protonSlider = document.getElementById('protonSlider');
+        const neutronSlider = document.getElementById('neutronSlider');
+        const electronSlider = document.getElementById('electronSlider');
+        const temperatureSlider = document.getElementById('temperatureSlider');
+        const protonValue = document.getElementById('protonValue');
+        const neutronValue = document.getElementById('neutronValue');
+        const electronValue = document.getElementById('electronValue');
+        const temperatureValue = document.getElementById('temperatureValue');
+        
+        // Element selector and visualization mode
+        const elementSelector = document.getElementById('elementSelector');
+        const visualModeInputs = document.querySelectorAll('input[name="visualMode"]');
+        
+        // Element info elements
+        const elementNameSpan = document.getElementById('elementName');
+        const elementSymbolSpan = document.getElementById('elementSymbol');
+        const atomicNumberSpan = document.getElementById('atomicNumber');
+        const atomicMassSpan = document.getElementById('atomicMass');
+        const elementCategorySpan = document.getElementById('elementCategory');
+        const electronConfigSpan = document.getElementById('electronConfig');
+        const densitySpan = document.getElementById('density');
+        const meltingPointSpan = document.getElementById('meltingPoint');
+        const tempEffectSpan = document.getElementById('tempEffect');
+        
+        // Buttons
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const resetButton = document.getElementById('resetButton');
+        
+        // Custom controls container
+        const customControls = document.querySelectorAll('#customControls');
+        
+        // Element selector event listener
+        elementSelector.addEventListener('change', function() {
+            selectedElement = this.value;
+            
+            if (selectedElement === "custom") {
+                // Show custom controls
+                customControls.forEach(control => {
+                    control.style.display = "flex";
+                });
+                
+                // Update element info display
+                updateElementInfo("custom");
+            } else {
+                // Set values based on selected element
+                const element = elements[selectedElement];
+                protons = element.atomicNumber;
+                neutrons = element.neutrons;
+                electrons = element.atomicNumber; // For neutral atoms
+                
+                // Update sliders
+                protonSlider.value = protons;
+                neutronSlider.value = neutrons;
+                electronSlider.value = electrons;
+                
+                // Update displayed values
+                protonValue.textContent = protons;
+                neutronValue.textContent = neutrons;
+                electronValue.textContent = electrons;
+                
+                // Hide custom controls
+                customControls.forEach(control => {
+                    control.style.display = "none";
+                });
+                
+                // Update element info display
+                updateElementInfo(selectedElement);
+                
+                // Reset and redraw
+                if (!isRunning) {
+                    resetSimulation();
+                    drawAtom();
+                }
+            }
+        });
+        
+        // Visual mode listeners
+        visualModeInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                visualMode = this.value;
+                if (!isRunning) {
+                    drawAtom();
+                }
+            });
+        });
+        
+        // Update values based on sliders
+        protonSlider.addEventListener('input', function() {
+            protons = parseInt(this.value);
+            protonValue.textContent = protons;
+            
+            // Update to custom element
+            elementSelector.value = "custom";
+            selectedElement = "custom";
+            updateElementInfo("custom");
+            
+            if (!isRunning) {
+                resetSimulation();
+                drawAtom();
+            }
+        });
+        
+        neutronSlider.addEventListener('input', function() {
+            neutrons = parseInt(this.value);
+            neutronValue.textContent = neutrons;
+            
+            // Update to custom element
+            elementSelector.value = "custom";
+            selectedElement = "custom";
+            updateElementInfo("custom");
+            
+            if (!isRunning) {
+                resetSimulation();
+                drawAtom();
+            }
+        });
+        
+        electronSlider.addEventListener('input', function() {
+            electrons = parseInt(this.value);
+            electronValue.textContent = electrons;
+            
+            // Update to custom element
+            elementSelector.value = "custom";
+            selectedElement = "custom";
+            updateElementInfo("custom");
+            
+            if (!isRunning) {
+                resetSimulation();
+                drawAtom();
+            }
+        });
+        
+        // Temperature slider
+        temperatureSlider.addEventListener('input', function() {
+            temperature = parseInt(this.value);
+            temperatureValue.textContent = temperature;
+            updateTemperatureEffects();
+        });
+        
+        // Button event listeners
+        startButton.addEventListener('click', startSimulation);
+        stopButton.addEventListener('click', stopSimulation);
+        resetButton.addEventListener('click', function() {
+            stopSimulation();
+            resetSimulation();
+            drawAtom();
+        });
+        
+        // Function to update element info display
+        function updateElementInfo(elementSymbol) {
+            if (elementSymbol === "custom") {
+                elementNameSpan.textContent = "Personalizado";
+                elementSymbolSpan.textContent = "-";
+                atomicNumberSpan.textContent = protons;
+                atomicMassSpan.textContent = `~${(protons + neutrons).toFixed(2)}`;
+                elementCategorySpan.textContent = "-";
+                electronConfigSpan.textContent = "Personalizado";
+                densitySpan.textContent = "-";
+                meltingPointSpan.textContent = "-";
+            } else {
+                const element = elements[elementSymbol];
+                elementNameSpan.textContent = element.name;
+                elementSymbolSpan.textContent = element.symbol;
+                atomicNumberSpan.textContent = element.atomicNumber;
+                atomicMassSpan.textContent = element.atomicMass;
+                elementCategorySpan.textContent = element.category;
+                electronConfigSpan.textContent = element.electronConfig;
+                densitySpan.textContent = element.density;
+                meltingPointSpan.textContent = element.meltingPoint;
+            }
+        }
+        
+        // Function to update temperature effects
+        function updateTemperatureEffects() {
+            let effect;
+            
+            if (temperature < 200) {
+                effect = "Em baixas temperaturas, o movimento das partículas é reduzido. Em materiais sólidos, as partículas vibram no lugar, com amplitude proporcional à temperatura.";
+            } else if (temperature < 500) {
+                effect = "À temperatura ambiente, as partículas apresentam movimento térmico moderado. Gases apresentam movimento aleatório contínuo.";
+            } else if (temperature < 800) {
+                effect = "Em temperaturas elevadas, o movimento térmico das partículas aumenta significativamente. Muitos materiais sólidos fundem-se, transformando-se em líquidos.";
+            } else {
+                effect = "Em temperaturas muito altas, as partículas movem-se com grande energia cinética. Muitos materiais encontram-se no estado gasoso ou plasma.";
+            }
+            
+            tempEffectSpan.textContent = effect;
+        }
+        
+        // Particle class with enhanced physics
+        class Particle {
+            constructor(x, y, radius, color, speed = 0, angle = 0, orbitRadius = 0, type = "electron") {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.speed = speed;
+                this.angle = angle;
+                this.orbitRadius = orbitRadius;
+                this.type = type; // "proton", "neutron", or "electron"
+                
+                // Physical properties
+                this.mass = type === "electron" ? 1 : (type === "proton" ? 1836 : 1839); // Mass relative to electron
+                this.charge = type === "proton" ? 1 : (type === "electron" ? -1 : 0);
+                
+                // Velocity components for nucleus particles
+                this.vx = 0;
+                this.vy = 0;
+                
+                // For electron cloud visualization
+                this.cloudPosition = {
+                    x: 0,
+                    y: 0
+                };
+                this.cloudOpacity = 0.6;
+                
+                // Initialize velocity based on temperature for nucleus particles
+                if (orbitRadius === 0) {
+                    const velocityMagnitude = Math.sqrt(0.1 * temperature / this.mass);
+                    const angle = Math.random() * Math.PI * 2;
+                    this.vx = Math.cos(angle) * velocityMagnitude;
+                    this.vy = Math.sin(angle) * velocityMagnitude;
+                }
+            }
+            
+            draw() {
+                if (visualMode === "bohr" || this.orbitRadius === 0) {
+                    // Standard particle visualization
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.closePath();
+                } else if (visualMode === "cloud" && this.type === "electron") {
+                    // Electron cloud visualization
+                    // Draw main electron
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 0.7, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.closePath();
+                    
+                    // Draw cloud effect
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    
+                    // Draw multiple semi-transparent circles to create cloud effect
+                    for (let i = 0; i < 8; i++) {
+                        const cloudX = centerX + Math.cos(this.angle + (i * Math.PI / 4)) * this.orbitRadius * (0.9 + Math.random() * 0.2);
+                        const cloudY = centerY + Math.sin(this.angle + (i * Math.PI / 4)) * this.orbitRadius * (0.9 + Math.random() * 0.2);
+                        
+                        ctx.beginPath();
+                        ctx.arc(cloudX, cloudY, this.radius * (0.8 + Math.random() * 0.4), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(52, 152, 219, ${0.1 + Math.random() * 0.2})`;
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+            }
+            
+            // Check for collisions with other particles
+            checkCollisions(particles) {
+                if (this.orbitRadius > 0) return; // Only check for nucleus particles
+                
+                for (let i = 0; i < particles.length; i++) {
+                    const other = particles[i];
+                    if (other === this) continue;
+                    
+                    const dx = this.x - other.x;
+                    const dy = this.y - other.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < this.radius + other.radius) {
+                        // Calculate collision response
+                        const angle = Math.atan2(dy, dx);
+                        const totalMass = this.mass + other.mass;
+                        
+                        // Conservation of momentum equations
+                        const v1x = ((this.mass - other.mass) * this.vx + 2 * other.mass * other.vx) / totalMass;
+                        const v1y = ((this.mass - other.mass) * this.vy + 2 * other.mass * other.vy) / totalMass;
+                        
+                        // Update velocities
+                        this.vx = v1x * 0.98; // Slight energy loss
+                        this.vy = v1y * 0.98;
+                        
+                        // Move particles apart to prevent sticking
+                        const overlap = (this.radius + other.radius - distance) / 2;
+                        this.x += Math.cos(angle) * overlap;
+                        this.y += Math.sin(angle) * overlap;
+                    }
+                }
+            }
+            
+            update() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                
+                if (this.orbitRadius > 0) {
+                    if (visualMode === "bohr") {
+                        // Bohr model - electrons orbit in fixed shells
+                        this.angle += this.speed * (1 + (temperature - 300) * 0.001); // Temperature affects speed
+                        this.x = centerX + Math.cos(this.angle) * this.orbitRadius;
+                        this.y = centerY + Math.sin(this.angle) * this.orbitRadius;
+                    } else {
+                        // Cloud model - electrons move in probability cloud
+                        this.angle += this.speed * (1 + (temperature - 300) * 0.001);
+                        
+                        // Base position on orbit
+                        const baseX = centerX + Math.cos(this.angle) * this.orbitRadius;
+                        const baseY = centerY + Math.sin(this.angle) * this.orbitRadius;
+                        
+                        // Add random variation based on temperature
+                        const variation = (temperature / 100) * (this.orbitRadius * 0.1);
+                        this.x = baseX + (Math.random() - 0.5) * variation;
+                        this.y = baseY + (Math.random() - 0.5) * variation;
+                    }
+                } else {
+                    // Nucleus particles with realistic Brownian motion
+                    
+                    // Scale velocity based on temperature
+                    const tempFactor = Math.sqrt(temperature / 300);
+                    
+                    // Random thermal "kicks" - Brownian motion
+                    this.vx += (Math.random() - 0.5) * 0.05 * tempFactor;
+                    this.vy += (Math.random() - 0.5) * 0.05 * tempFactor;
+                    
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Nuclear force - keep particles in nucleus
+                    const dx = centerX - this.x;
+                    const dy = centerY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Simulate nuclear force
+                    const nucleusRadius = 30 + (protons + neutrons) * 0.5;
+                    if (distance > nucleusRadius) {
+                        // Strong force pulling back
+                        const forceMagnitude = 0.01 * (distance - nucleusRadius);
+                        this.vx += (dx / distance) * forceMagnitude;
+                        this.vy += (dy / distance) * forceMagnitude;
+                    }
+                    
+                    // Damping to prevent excessive energy
+                    this.vx *= 0.98;
+                    this.vy *= 0.98;
+                    
+                    // Limit maximum velocity
+                    const maxVel = 2 * tempFactor;
+                    const currentVel = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    if (currentVel > maxVel) {
+                        this.vx = (this.vx / currentVel) * maxVel;
+                        this.vy = (this.vy / currentVel) * maxVel;
+                    }
+                }
+                
+                this.draw();
+            }
+        }
+        
+        // Initialize particles based on element configuration
+        function initializeParticles() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Calculate nucleus radius based on number of particles
+            const nucleusRadius = 20 + Math.sqrt(protons + neutrons) * 2;
+            
+            // Create protons
+            for (let i = 0; i < protons; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * nucleusRadius;
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY + Math.sin(angle) * distance;
+                protonParticles.push(new Particle(x, y, 10, '#e74c3c', 0, 0, 0, "proton"));
+            }
+            
+            // Create neutrons
+            for (let i = 0; i < neutrons; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * nucleusRadius;
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY + Math.sin(angle) * distance;
+                neutronParticles.push(new Particle(x, y, 10, '#34495e', 0, 0, 0, "neutron"));
+            }
+            
+            // Get electron configuration
+            let electronArrangement = [];
+            
+            if (selectedElement !== "custom" && elements[selectedElement]) {
+                electronArrangement = elements[selectedElement].electronArrangement;
+            } else {
+                // Default arrangement based on basic rules
+                let remaining = electrons;
+                const maxPerShell = [2, 8, 18, 32, 50];
+                
+                for (let i = 0; i < maxPerShell.length && remaining > 0; i++) {
+                    const shellCount = Math.min(remaining, maxPerShell[i]);
+                    electronArrangement.push(shellCount);
+                    remaining -= shellCount;
+                }
+                
+                // If there are still electrons, add them to the last shell
+                if (remaining > 0) {
+                    electronArrangement[electronArrangement.length - 1] += remaining;
+                }
+            }
+            
+            // Create electrons in shells according to arrangement
+            let electronIndex = 0;
+            for (let shell = 0; shell < electronArrangement.length; shell++) {
+                const electronsInShell = electronArrangement[shell];
+                const orbitRadius = 80 + shell * 40;
+                
+                for (let i = 0; i < electronsInShell; i++) {
+                    const angle = (i * (Math.PI * 2 / electronsInShell)) + (shell * 0.2); // Offset each shell
+                    const speed = 0.02 / (shell + 1); // Outer shells move slower
+                    
+                    // Color electrons based on shell (energy level)
+                    let electronColor;
+                    switch (shell) {
+                        case 0: electronColor = '#3498db'; break; // K shell - blue
+                        case 1: electronColor = '#27ae60'; break; // L shell - green
+                        case 2: electronColor = '#f39c12'; break; // M shell - orange
+                        case 3: electronColor = '#9b59b6'; break; // N shell - purple
+                        default: electronColor = '#e74c3c'; break; // Higher shells - red
+                    }
+                    
+                    electronParticles.push(new Particle(0, 0, 5, electronColor, speed, angle, orbitRadius, "electron"));
+                    electronIndex++;
+                }
+            }
+        }
+        
+        // Draw static atom
+        function drawAtom() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Get electron configuration
+            let electronArrangement = [];
+            
+            if (selectedElement !== "custom" && elements[selectedElement]) {
+                electronArrangement = elements[selectedElement].electronArrangement;
+            } else {
+                // Default arrangement based on basic rules
+                let remaining = electrons;
+                const maxPerShell = [2, 8, 18, 32, 50];
+                
+                for (let i = 0; i < maxPerShell.length && remaining > 0; i++) {
+                    const shellCount = Math.min(remaining, maxPerShell[i]);
+                    electronArrangement.push(shellCount);
+                    remaining -= shellCount;
+                }
+            }
+            
+            if (visualMode === "bohr") {
+                // Draw orbit paths for Bohr model
+                ctx.strokeStyle = '#ddd';
+                for (let i = 0; i < electronArrangement.length; i++) {
+                    const radius = 80 + i * 40;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            } else {
+                // Draw electron cloud probability zones
+                for (let i = 0; i < electronArrangement.length; i++) {
+                    const shellRadius = 80 + i * 40;
+                    const cloudThickness = 25 + (temperature / 50);
+                    
+                    // Draw shell probability region
+                    const gradient = ctx.createRadialGradient(
+                        centerX, centerY, shellRadius - cloudThickness/2,
+                        centerX, centerY, shellRadius + cloudThickness/2
+                    );
+                    
+                    let color;
+                    switch (i) {
+                        case 0: color = 'rgba(52, 152, 219, 0.1)'; break; // K shell - blue
+                        case 1: color = 'rgba(39, 174, 96, 0.1)'; break;  // L shell - green
+                        case 2: color = 'rgba(243, 156, 18, 0.1)'; break; // M shell - orange
+                        case 3: color = 'rgba(155, 89, 182, 0.1)'; break; // N shell - purple
+                        default: color = 'rgba(231, 76, 60, 0.1)'; break; // Higher shells - red
+                    }
+                    
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                    gradient.addColorStop(0.5, color);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, shellRadius + cloudThickness/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw nucleus glow effect based on temperature
+            const nucleusRadius = 30 + (protons + neutrons) * 0.5;
+            const glowSize = nucleusRadius * (1 + temperature / 2000);
+            
+            const nucleusGlow = ctx.createRadialGradient(
+                centerX, centerY, nucleusRadius * 0.8,
+                centerX, centerY, glowSize
+            );
+            
+            // Temperature-based color
+            let glowColor;
+            if (temperature < 200) {
+                glowColor = 'rgba(52, 152, 219, 0.2)'; // Cool blue
+            } else if (temperature < 500) {
+                glowColor = 'rgba(241, 196, 15, 0.2)'; // Yellow
+            } else if (temperature < 800) {
+                glowColor = 'rgba(230, 126, 34, 0.2)'; // Orange
+            } else {
+                glowColor = 'rgba(231, 76, 60, 0.2)'; // Red hot
+            }
+            
+            nucleusGlow.addColorStop(0, glowColor);
+            nucleusGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = nucleusGlow;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw all particles
+            protonParticles.forEach(particle => particle.draw());
+            neutronParticles.forEach(particle => particle.draw());
+            electronParticles.forEach(particle => particle.draw());
+        }
+        
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Get electron configuration
+            let electronArrangement = [];
+            
+            if (selectedElement !== "custom" && elements[selectedElement]) {
+                electronArrangement = elements[selectedElement].electronArrangement;
+            } else {
+                // Default arrangement based on basic rules
+                let remaining = electrons;
+                const maxPerShell = [2, 8, 18, 32, 50];
+                
+                for (let i = 0; i < maxPerShell.length && remaining > 0; i++) {
+                    const shellCount = Math.min(remaining, maxPerShell[i]);
+                    electronArrangement.push(shellCount);
+                    remaining -= shellCount;
+                }
+            }
+            
+            if (visualMode === "bohr") {
+                // Draw orbit paths for Bohr model
+                ctx.strokeStyle = '#ddd';
+                for (let i = 0; i < electronArrangement.length; i++) {
+                    const radius = 80 + i * 40;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            } else {
+                // Draw electron cloud probability zones
+                for (let i = 0; i < electronArrangement.length; i++) {
+                    const shellRadius = 80 + i * 40;
+                    const cloudThickness = 25 + (temperature / 50);
+                    
+                    // Draw shell probability region
+                    const gradient = ctx.createRadialGradient(
+                        centerX, centerY, shellRadius - cloudThickness/2,
+                        centerX, centerY, shellRadius + cloudThickness/2
+                    );
+                    
+                    let color;
+                    switch (i) {
+                        case 0: color = 'rgba(52, 152, 219, 0.1)'; break; // K shell - blue
+                        case 1: color = 'rgba(39, 174, 96, 0.1)'; break;  // L shell - green
+                        case 2: color = 'rgba(243, 156, 18, 0.1)'; break; // M shell - orange
+                        case 3: color = 'rgba(155, 89, 182, 0.1)'; break; // N shell - purple
+                        default: color = 'rgba(231, 76, 60, 0.1)'; break; // Higher shells - red
+                    }
+                    
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                    gradient.addColorStop(0.5, color);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, shellRadius + cloudThickness/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw nucleus glow effect based on temperature
+            const nucleusRadius = 30 + (protons + neutrons) * 0.5;
+            const glowSize = nucleusRadius * (1 + temperature / 2000);
+            
+            const nucleusGlow = ctx.createRadialGradient(
+                centerX, centerY, nucleusRadius * 0.8,
+                centerX, centerY, glowSize
+            );
+            
+            // Temperature-based color
+            let glowColor;
+            if (temperature < 200) {
+                glowColor = 'rgba(52, 152, 219, 0.2)'; // Cool blue
+            } else if (temperature < 500) {
+                glowColor = 'rgba(241, 196, 15, 0.2)'; // Yellow
+            } else if (temperature < 800) {
+                glowColor = 'rgba(230, 126, 34, 0.2)'; // Orange
+            } else {
+                glowColor = 'rgba(231, 76, 60, 0.2)'; // Red hot
+            }
+            
+            nucleusGlow.addColorStop(0, glowColor);
+            nucleusGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = nucleusGlow;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, glowSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Check for collisions between nucleus particles
+            for (let i = 0; i < protonParticles.length; i++) {
+                protonParticles[i].checkCollisions([...protonParticles, ...neutronParticles]);
+            }
+            
+            for (let i = 0; i < neutronParticles.length; i++) {
+                neutronParticles[i].checkCollisions([...protonParticles, ...neutronParticles]);
+            }
+            
+            // Update and draw all particles
+            protonParticles.forEach(particle => particle.update());
+            neutronParticles.forEach(particle => particle.update());
+            electronParticles.forEach(particle => particle.update());
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Start simulation
+        function startSimulation() {
+            if (!isRunning) {
+                isRunning = true;
+                animate();
+            }
+        }
+        
+        // Stop simulation
+        function stopSimulation() {
+            if (isRunning) {
+                isRunning = false;
+                cancelAnimationFrame(animationId);
+            }
+        }
+        
+        // Reset simulation
+        function resetSimulation() {
+            // Clear particle arrays
+            protonParticles = [];
+            neutronParticles = [];
+            electronParticles = [];
+            
+            // Reinitialize particles
+            initializeParticles();
+        }
+        
+        // Initialize and draw static atom on load
+        updateTemperatureEffects();
+        resetSimulation();
+        drawAtom();
+        
+        // Initially show custom controls
+        customControls.forEach(control => {
+            control.style.display = "flex";
+        });
+    </script>
+</body>
+</html>
+
