@@ -335,6 +335,50 @@ function Explosion({ position, onComplete, isSmall = false }) {
   );
 }
 
+// Score Popup Component
+function ScorePopup({ position, amount, onComplete }) {
+  const popupRef = useRef<THREE.Group>();
+  const timer = useRef(0);
+  
+  useFrame((_, delta) => {
+    timer.current += delta;
+    
+    if (timer.current > 1.2) {
+      onComplete();
+      return;
+    }
+    
+    if (popupRef.current) {
+      // Float upward
+      popupRef.current.position.y += delta * 1.0;
+      
+      // Fade out gradually
+      const opacity = 1 - (timer.current / 1.2);
+      if (popupRef.current.children[0]) {
+        (popupRef.current.children[0] as any).material.opacity = opacity;
+      }
+    }
+  });
+  
+  const color = amount > 10 ? "#ffdd00" : "#ffffff";
+  const scale = amount > 10 ? 1.2 : 1.0;
+  
+  return (
+    <group ref={popupRef} position={[position.x, position.y + 0.5, 0]}>
+      <Text
+        fontSize={0.3 * scale}
+        color={color}
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#000000"
+      >
+        +{amount}
+      </Text>
+    </group>
+  );
+}
+
 // Main game component
 function GameScene({ 
   onScoreUpdate, 
@@ -348,6 +392,7 @@ function GameScene({
   const [asteroids, setAsteroids] = useState([]);
   const [lasers, setLasers] = useState([]);
   const [explosions, setExplosions] = useState([]);
+  const [scorePopups, setScorePopups] = useState([]);
   const [health, setHealth] = useState(100);
   const [laserEnergy, setLaserEnergy] = useState(100);
   const [score, setScore] = useState(0);
@@ -502,8 +547,8 @@ function GameScene({
           Math.pow(laser.position.y - asteroid.position.y, 2)
         );
         
-        // If collision detected - improved hit detection with a slightly larger area
-        const hitRadius = asteroid.size + 0.25; // Slightly larger hit area for better gameplay feel
+        // If collision detected - improved hit detection with a larger area
+        const hitRadius = asteroid.size + 0.35; // Larger hit area for better gameplay feel
         if (distance < hitRadius) {
           // Remove laser
           newLasers.splice(i, 1);
@@ -524,7 +569,15 @@ function GameScene({
             playSound('smallExplosion');
             
             // Small score for first hit
-            setScore(prev => prev + 5);
+            const hitPoints = 5;
+            setScore(prev => prev + hitPoints);
+            
+            // Add score popup
+            setScorePopups(prev => [...prev, {
+              id: `score-${Date.now()}-${Math.random()}`,
+              position: { ...asteroid.position },
+              amount: hitPoints
+            }]);
           } else {
             // Second hit - destroy the asteroid
             // Add explosion
@@ -541,7 +594,15 @@ function GameScene({
             playSound('explosion');
             
             // Increase score - more points for destroying
-            setScore(prev => prev + 15);
+            const destroyPoints = Math.round(20 + asteroid.size * 10); // Bigger asteroids = more points
+            setScore(prev => prev + destroyPoints);
+            
+            // Add score popup
+            setScorePopups(prev => [...prev, {
+              id: `score-${Date.now()}-${Math.random()}`,
+              position: { ...asteroid.position },
+              amount: destroyPoints
+            }]);
           }
           
           collisionOccurred = true;
@@ -567,7 +628,7 @@ function GameScene({
       );
       
       // If collision detected - improved collision detection with spaceship
-      const collisionRadius = asteroid.size + 0.6; // Slightly larger collision area for better gameplay feel
+      const collisionRadius = asteroid.size + 0.7; // Larger collision area for better gameplay feel
       if (distance < collisionRadius) {
         // Add explosion
         newExplosions.push({
@@ -590,6 +651,12 @@ function GameScene({
       if (newExplosions[i].completed) {
         newExplosions.splice(i, 1);
       }
+    }
+    
+    // Remove completed score popups
+    const newScorePopups = scorePopups.filter(popup => !popup.completed);
+    if (newScorePopups.length !== scorePopups.length) {
+      setScorePopups(newScorePopups);
     }
     
     // Update state if changes occurred
@@ -621,6 +688,15 @@ function GameScene({
     setExplosions(prev => 
       prev.map(exp => 
         exp.id === id ? { ...exp, completed: true } : exp
+      )
+    );
+  };
+  
+  // Handle score popup completion
+  const handleScorePopupComplete = (id) => {
+    setScorePopups(prev => 
+      prev.map(popup => 
+        popup.id === id ? { ...popup, completed: true } : popup
       )
     );
   };
@@ -666,6 +742,16 @@ function GameScene({
           position={explosion.position}
           onComplete={() => handleExplosionComplete(explosion.id)}
           isSmall={explosion.isSmall}
+        />
+      ))}
+      
+      {/* Score Popups */}
+      {scorePopups.map(popup => (
+        <ScorePopup
+          key={popup.id}
+          position={popup.position}
+          amount={popup.amount}
+          onComplete={() => handleScorePopupComplete(popup.id)}
         />
       ))}
       
@@ -725,57 +811,76 @@ export function QuantumFlightGame() {
   };
   
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-black/30 p-4 rounded flex items-center justify-between">
-          <span className="font-semibold">Score:</span>
-          <span className="text-xl font-bold">{score}</span>
+    <div className="max-w-5xl mx-auto">
+      {/* Main Navigation Menu */}
+      <nav className="bg-gradient-to-r from-blue-900 to-purple-900 text-white py-3 px-4 rounded-b-lg shadow-lg mb-6 -mx-4 sticky top-0 z-20">
+        <div className="flex flex-wrap justify-center md:justify-between items-center">
+          <div className="font-bold text-xl mb-2 md:mb-0 w-full md:w-auto text-center md:text-left">
+            Física Quântica
+          </div>
+          <ul className="flex flex-wrap justify-center space-x-1 md:space-x-4">
+            <li><a href="#metodologia" className="px-3 py-2 rounded hover:bg-blue-700 transition-colors">Metodologia</a></li>
+            <li><a href="#teorias" className="px-3 py-2 rounded hover:bg-blue-700 transition-colors">Teorias</a></li>
+            <li><a href="#descobertas" className="px-3 py-2 rounded hover:bg-blue-700 transition-colors">Descobertas</a></li>
+            <li><a href="#inconsistencias" className="px-3 py-2 rounded hover:bg-blue-700 transition-colors">Inconsistências</a></li>
+            <li><a href="#conclusoes" className="px-3 py-2 rounded hover:bg-blue-700 transition-colors">Conclusões</a></li>
+          </ul>
         </div>
-        
-        <div className="bg-black/30 p-4 rounded">
-          <div className="flex justify-between mb-1">
-            <span className="font-semibold">Shield:</span>
-            <span>{health}%</span>
+      </nav>
+      
+      {/* Game Controls */}
+      <div className="flex justify-center mt-0 pt-0 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+          <div className="bg-black/50 p-4 rounded-lg shadow-lg flex items-center justify-between border border-yellow-500/30">
+            <span className="font-semibold text-lg">Score:</span>
+            <span className="text-2xl font-bold text-yellow-400">{score}</span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2.5">
-            <div 
-              className={`h-2.5 rounded-full ${
-                health > 60 ? 'bg-green-500' : 
-                health > 30 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
-              style={{ width: `${health}%` }}
-            ></div>
+          
+          <div className="bg-black/30 p-4 rounded">
+            <div className="flex justify-between mb-1">
+              <span className="font-semibold">Shield:</span>
+              <span>{health}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2.5">
+              <div 
+                className={`h-2.5 rounded-full ${
+                  health > 60 ? 'bg-green-500' : 
+                  health > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${health}%` }}
+              ></div>
+            </div>
           </div>
-        </div>
-        
-        <div className="bg-black/30 p-4 rounded">
-          <div className="flex justify-between mb-1">
-            <span className="font-semibold">Laser Energy:</span>
-            <span>{laserEnergy.toFixed(0)}%</span>
+          
+          <div className="bg-black/30 p-4 rounded">
+            <div className="flex justify-between mb-1">
+              <span className="font-semibold">Laser Energy:</span>
+              <span>{laserEnergy.toFixed(0)}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2.5">
+              <div 
+                className="h-2.5 rounded-full bg-blue-500"
+                style={{ width: `${laserEnergy}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2.5">
-            <div 
-              className="h-2.5 rounded-full bg-blue-500"
-              style={{ width: `${laserEnergy}%` }}
-            ></div>
+          
+          <div className="bg-black/30 p-4 rounded">
+            <button 
+              onClick={toggleLaserMode}
+              className={`w-full py-1 px-3 rounded-md ${
+                laserMode === "quantum" 
+                  ? 'bg-yellow-500 hover:bg-yellow-600' 
+                  : 'bg-blue-500 hover:bg-blue-600'
+              } text-white font-semibold transition-colors`}
+            >
+              {laserMode === "quantum" ? "Quantum Helium Laser" : "Standard Laser"}
+            </button>
           </div>
-        </div>
-        
-        <div className="bg-black/30 p-4 rounded">
-          <button 
-            onClick={toggleLaserMode}
-            className={`w-full py-1 px-3 rounded-md ${
-              laserMode === "quantum" 
-                ? 'bg-yellow-500 hover:bg-yellow-600' 
-                : 'bg-blue-500 hover:bg-blue-600'
-            } text-white font-semibold transition-colors`}
-          >
-            {laserMode === "quantum" ? "Quantum Helium Laser" : "Standard Laser"}
-          </button>
         </div>
       </div>
       
-      <div className="bg-black/30 rounded-lg overflow-hidden" style={{ height: '500px' }}>
+      <div className="bg-black/30 rounded-lg overflow-hidden relative mx-auto mt-6" style={{ height: '500px' }}>
         <Canvas camera={{ position: [0, 0, 10], fov: 50 }}>
           <GameScene 
             onScoreUpdate={setScore}
@@ -789,40 +894,47 @@ export function QuantumFlightGame() {
         <div className="absolute bottom-4 left-4 text-white text-sm bg-black/50 p-2 rounded">
           <p>Click with mouse to fire lasers</p>
         </div>
+        <div className="absolute top-4 right-4 text-white text-3xl font-bold bg-black/50 px-4 py-2 rounded-lg shadow-lg border border-yellow-500/30">
+          <p className="text-yellow-400">{score}</p>
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-black/30 p-4 rounded">
-          <h3 className="font-semibold mb-2">Quantum Helium Laser</h3>
-          <p className="text-gray-300 mb-3">
-            The quantum helium laser utilizes helium's atomic structure and quantum mechanics principles 
-            to generate a highly coherent and powerful beam, similar to the fusion processes in the sun.
-          </p>
-          <MathJax className="text-gray-300 text-sm">
-            {"$E = h\\nu + \\frac{1}{2}m_e v^2 - E_i$"}
-          </MathJax>
-          <p className="mt-2 text-sm text-gray-400">
-            Helium fusion produces energies of ~26.7 MeV, creating laser light in the ultraviolet spectrum.
-          </p>
-        </div>
-        
-        <div className="bg-black/30 p-4 rounded">
-          <h3 className="font-semibold mb-2">Game Controls</h3>
-          <div className="grid grid-cols-2 gap-2 text-gray-300">
-            <div>
-              <span className="font-semibold">Movement:</span>
-              <ul className="pl-4 mt-1 space-y-1">
-                <li>• Left Arrow / A: Move left</li>
-                <li>• Right Arrow / D: Move right</li>
-              </ul>
+      <div className="flex justify-center mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+          <div className="bg-black/30 p-4 rounded">
+            <h3 className="font-semibold mb-2 text-center">Quantum Helium Laser</h3>
+            <p className="text-gray-300 mb-3">
+              The quantum helium laser utilizes helium's atomic structure and quantum mechanics principles 
+              to generate a highly coherent and powerful beam, similar to the fusion processes in the sun.
+            </p>
+            <div className="flex justify-center">
+              <MathJax className="text-gray-300 text-sm">
+                {"$E = h\\nu + \\frac{1}{2}m_e v^2 - E_i$"}
+              </MathJax>
             </div>
-            <div>
-              <span className="font-semibold">Actions:</span>
-              <ul className="pl-4 mt-1 space-y-1">
-                <li>• Space / F: Fire laser</li>
-                <li>• Mouse Button: Fire laser</li>
-                <li>• Q: Toggle laser mode</li>
-              </ul>
+            <p className="mt-2 text-sm text-gray-400 text-center">
+              Helium fusion produces energies of ~26.7 MeV, creating laser light in the ultraviolet spectrum.
+            </p>
+          </div>
+          
+          <div className="bg-black/30 p-4 rounded">
+            <h3 className="font-semibold mb-2 text-center">Game Controls</h3>
+            <div className="grid grid-cols-2 gap-2 text-gray-300">
+              <div>
+                <span className="font-semibold">Movement:</span>
+                <ul className="pl-4 mt-1 space-y-1">
+                  <li>• Left Arrow / A: Move left</li>
+                  <li>• Right Arrow / D: Move right</li>
+                </ul>
+              </div>
+              <div>
+                <span className="font-semibold">Actions:</span>
+                <ul className="pl-4 mt-1 space-y-1">
+                  <li>• Space / F: Fire laser</li>
+                  <li>• Mouse Button: Fire laser</li>
+                  <li>• Q: Toggle laser mode</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
